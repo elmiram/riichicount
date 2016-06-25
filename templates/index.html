@@ -1,0 +1,124 @@
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="description" content="Сколько стоит рука в риичи маджонге?">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+    <title>Стоимость руки</title>
+
+    <!-- Add to homescreen for Chrome on Android -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <link rel="icon" sizes="192x192" href="images/android-desktop.png">
+
+    <!-- Add to homescreen for Safari on iOS -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="Стоимость руки">
+    <link rel="apple-touch-icon-precomposed" href="images/ios-desktop.png">
+
+    <!-- Tile icon for Win8 (144x144 + tile color) -->
+    <meta name="msapplication-TileImage" content="images/touch/ms-touch-icon-144x144-precomposed.png">
+    <meta name="msapplication-TileColor" content="#3372DF">
+
+    <link rel="shortcut icon" href="images/favicon.png">
+
+    <!-- SEO: If your mobile URL is different from the desktop URL, add a canonical link to the desktop page https://developers.google.com/webmasters/smartphone-sites/feature-phones -->
+    <!--
+    <link rel="canonical" href="http://www.example.com/">
+    -->
+
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:regular,bold,italic,thin,light,bolditalic,black,medium&amp;lang=en">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="stylesheet" href="https://code.getmdl.io/1.1.3/material.teal-red.min.css">
+      <style>
+.demo-card-square.mdl-card {
+  width: 160px;
+    min-height: 50px;
+    max-height: 100px;
+}
+          .mdl-textfield {
+  max-width: 50px;
+}
+</style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/styles.css') }}">
+    <link rel="stylesheet"  type= "text/css" href="{{ url_for('static', filename='styles/tiles2.css') }}">
+
+  </head>
+  <body>
+    <div class="demo-layout mdl-layout mdl-layout--fixed-header mdl-js-layout mdl-color--grey-100">
+      <div class="demo-ribbon"></div>
+      <main class="demo-main mdl-layout__content">
+        <div class="demo-container mdl-grid">
+          <div class="mdl-cell mdl-cell--2-col mdl-cell--hide-tablet mdl-cell--hide-phone"></div>
+          <div class="demo-content mdl-color--white mdl-shadow--4dp content mdl-color-text--grey-800 mdl-cell mdl-cell--8-col">
+            <h3>Сколько стоит рука?</h3>
+          <table>
+              <tr>
+                  <td>
+                      <div class="demo-card-square mdl-card mdl-shadow--2dp"><div class="mdl-card__supporting-text">
+                        Раунд: {{ hand.round_name }}</div></div>
+                  </td>
+                  <td>
+                      <div class="demo-card-square mdl-card mdl-shadow--2dp"><div class="mdl-card__supporting-text">
+                        Место: {{ hand.seat_name }}</div></div>
+                  </td>
+                  <td>
+                      <div class="demo-card-square mdl-card mdl-shadow--2dp"><div class="mdl-card__supporting-text">
+                        Победа по {{ hand.victory }}</div></div>
+                  </td>
+                  <td>{% if hand.riichi %}
+                  <div class="demo-card-square mdl-card mdl-shadow--2dp"><div class="mdl-card__supporting-text">
+                        Риичи{% if hand.ippatsu %}, иппацу{% endif %}</div></div>{% endif %}
+                  </td>
+              </tr>
+              <tr>
+                  <td>
+                      <div class="demo-card-square mdl-card mdl-shadow--2dp"><div class="mdl-card__supporting-text">
+                        Индикатор доры: {{ hand.dora|safe  }}</div></div>
+                  </td>
+                  <td>
+                  {% if hand.ura %}
+                      <div class="demo-card-square mdl-card mdl-shadow--2dp"><div class="mdl-card__supporting-text">
+                  Индикаторы ура-дор: {% for i in hand.ura %} {{ i|safe  }}{% endfor %}
+                      </div></div> {% endif %}
+                  </td>
+                  <td>
+                  {% if hand.kandora %}
+                      <div class="demo-card-square mdl-card mdl-shadow--2dp"><div class="mdl-card__supporting-text">
+                  Индикаторы кан-дор: {% for i in hand.kandora %} {{ i|safe  }}{% endfor %}
+                      </div></div>{% endif %}
+                  </td>
+              </tr>
+          </table>
+                <p></p>
+              <p>{{ hand.view|safe }}</p>
+          <div class="mdl-card__supporting-text">
+              <form action="#">
+                  Стоимость руки:
+              <span class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                <input class="mdl-textfield__input" type="text" pattern="-?[0-9]*(\.[0-9]+)?" id="han" size="7" width="7em">
+                <label class="mdl-textfield__label" for="han">Хан</label>
+                <span class="mdl-textfield__error">Введите число</span>
+              </span>
+                <span class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                <input class="mdl-textfield__input" type="text" pattern="-?[0-9]*(\.[0-9]+)?" id="fu" size="5" width="5em">
+                <label class="mdl-textfield__label" for="fu">Фу</label>
+                <span class="mdl-textfield__error">Введите число</span>
+              </span>
+                  <br><input type="submit" class="mdl-button mdl-js-button mdl-button--raised" value="Проверить">
+              </form>
+                      </div>
+<div class="mdl-card__supporting-text">
+              <p>Валидная рука: {{ hand.isvalid }} </p>
+              <p>Стоимость: {{ hand.han }} хан, {{ hand.fu }} фу</p>
+              {% for i in hand.yaku %} <p>{{ i  }} - {{ hand.yaku[i] }}</p>{% endfor %}
+</div>
+          </div>
+        </div>
+      </main>
+    </div>
+    <script src="https://code.getmdl.io/1.1.3/material.min.js"></script>
+  </body>
+</html>

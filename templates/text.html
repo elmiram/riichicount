@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Стоимость руки</title>
+    <meta name="description" content="Сколько стоит рука в риичи маджонге?">
+    <link rel="stylesheet"  type= "text/css" href="{{ url_for('static', filename='styles/tiles2.css') }}">
+    <script type="text/javascript" src="{{ url_for('static', filename='jquery-1.11.0.min.js') }}"></script>
+    <style>
+        html {font: 100%/150% arial,calibri,helvetica,sans-serif;}
+        td {padding: 10px}
+        body {margin: 20px}
+    </style>
+</head>
+<body>
+ <h3>Сколько стоит рука?</h3>
+          <table>
+              <tr>
+                  <td>
+                        Раунд: {{ hand.round_name }}
+                  </td>
+                  <td>
+                      Место: {{ hand.seat_name }}
+                  </td>
+                  <td>
+                      Победа по {{ hand.victory }}
+                  </td>
+                  <td>{% if hand.riichi %}
+                  Риичи{% if hand.ippatsu %}, иппацу{% endif %}{% endif %}
+                  </td>
+              </tr>
+          </table>
+            <table>
+              <tr>
+                  <td>
+                      Индикатор доры: {{ hand.dora|safe  }}
+                  </td>
+                  <td>
+                  {% if hand.ura %}
+                      Индикаторы ура-дор: {% for i in hand.ura %} {{ i|safe  }}{% endfor %}
+                     {% endif %}
+                  </td>
+                  <td>
+                  {% if hand.kandora %}
+                     Индикаторы кан-дор: {% for i in hand.kandora %} {{ i|safe  }}{% endfor %}
+                     {% endif %}
+                  </td>
+              </tr>
+          </table>
+                <p></p>
+              <p>{{ hand.view|safe }}</p>
+              <form action='#' id="form">
+                  <label for="han">Хан: </label><input id="han" size="7" width="7em">
+                  <label for="fu">Фу: </label><input id="fu" size="5" width="5em"><br><br>
+                  {% if hand.victory == 'рон' %}<label for="ron">Выплата в очках: </label><input id="ron" size="5" width="5em"><br>{% endif %}
+                  {% if hand.victory == 'цумо' %}
+                      {% if hand.seat == 'ea' %}
+                      <label for="tsumo">Каждый платит <input id="tsumo" size="5" width="5em"> очков</label><br>
+                      {% endif %}
+                      {% if hand.seat == 'so' or hand.seat == 'no' or hand.seat == 'we'%}
+                      <label for="tsumo1">Дилер платит <input id="tsumo1" size="5" width="5em"> очков</label><br>
+                          <label for="tsumo2">Остальные платят <input id="tsumo2" size="5" width="5em"> очков</label><br>
+                      {% endif %}
+                  {% endif %}
+              <br>
+                  <label><input type="checkbox" id="chombo"> Чомбо</label>
+                  <label><input type="checkbox" id="yakuman"> Якуман</label><br><br>
+                  <input id='check' type="submit" value="Проверить">
+                  <input id='reload' type="button" onClick="history.go(0)" value="Обновить">
+              </form>
+                <span id="response"></span>
+                <div id="cost" style="display: none">
+                <p>Стоимость: {{ hand.han }} хан, {{ hand.fu }} фу</p>
+                {% if hand.han > 0%}<p>Начисление хан</p>
+                <ul style="list-style: none;">
+                    {% for i in hand.yaku %} <li>{{ i  }} - {{ hand.yaku[i] }}</li>{% endfor %}
+                </ul>
+                {% endif %}
+                {% if hand.minipoints %}<p>Начисление минипоинтов</p>
+                <ul style="list-style: none;">
+                    {% for i in hand.minipoints %} <li>{{ i  }} - {{ hand.minipoints[i] }}</li>{% endfor %}
+                </ul>
+                {% endif %}
+                </div>
+
+{#              <p>Валидная рука: {{ hand.isvalid }} </p>#}
+
+</body>
+
+
+<script type="text/javascript">
+
+    $(function () {
+        function check() {
+            var valid = {{ hand.isvalid|lower }};
+            var yakuman = {{ hand.isyakuman|lower }};
+
+            var s = $("#form");
+            var han = s.find("input[id=han]").val();
+            var fu = s.find("input[id=fu]").val();
+            var checked_chombo = (document.getElementById('chombo').checked);
+            var checked_yakuman = (document.getElementById('yakuman').checked);
+            if (yakuman){
+                if (checked_yakuman){$("#response").text('Правильно!');
+                }
+                else {
+                    $('#cost').show();
+                }
+            }
+            else if (!valid){
+                if (checked_chombo){$("#response").text('Правильно!');
+                }
+                else {
+                    $('#cost').show();
+                }
+            }
+            else {
+                if ((han == '{{ hand.han }}' && fu == '{{ hand.fu }}')) {
+                    $("#response").text('Правильно!');
+                }
+                else {
+                    $('#cost').show();
+                }}
+        }
+
+        $("#form").submit(check);
+    })
+
+</script>
+</html>
