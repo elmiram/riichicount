@@ -2,7 +2,7 @@
 __author__ = 'elmira'
 
 from flask import Flask
-from flask import render_template, url_for
+from flask import render_template, url_for, request
 from generatehand import Hand, random_pick
 
 app = Flask(__name__, static_folder='./static/', static_path='/static')
@@ -15,6 +15,5 @@ def hello_world():
     while a.isvalid != isvalid:
         a = Hand()
     return render_template('text.html', hand=a)
-
 if __name__ == '__main__':
     app.run(debug=True)

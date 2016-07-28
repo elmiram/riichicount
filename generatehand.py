@@ -93,7 +93,7 @@ class Hand:
         self.last_meld = Meld()
         self.starthand = random_pick([self.create_structure, self.create_chitoi, self.create_kokushi], [0.8, 0.15, 0.05])
         self.starthand()
-        if self.victory == 'ron':
+        if self.victory == u'рон':
             self.last_meld.isopen = True
         self.view = self.publish(self.sorthand(self.h))
         self.isclosed = True
@@ -360,7 +360,8 @@ class Hand:
             if m.kind == 'pair':
                 if m.tiles[0].value in WINDS:
                     p = 1
-        if n == 2:
+        pair_value = [m for m in self.melds if m.kind == 'pair'][0].tiles[0].value
+        if n == 2 and pair_value in DRAGONS:
             self.yaku[u'сёсанген'] += 2
             self.han += 2
         if n == 3:
@@ -559,10 +560,14 @@ class Hand:
             pair_value = self.last_meld.tiles[0].value
         melds = [m for m in self.melds if m.kind in ['pon', 'kan']]
         flag = False
-        if pair_value in DRAGONS or pair_value in [self.seat, self.round]:
+        if pair_value in DRAGONS or pair_value == self.seat:
             self.fu += 2
             flag = True
-            self.minipoints[u'пара ценных тайлов'] = 2
+            self.minipoints[u'пара ценных тайлов'] += 2
+        if pair_value == self.round:
+            self.fu += 2
+            flag = True
+            self.minipoints[u'пара ценных тайлов'] += 2
         if self.last_meld.tanki or self.last_meld.pentyan or self.last_meld.kantyan:
             self.fu += 2
             self.minipoints[u'неудобное ожидание'] = 2
@@ -603,6 +608,7 @@ class Hand:
         if not flag:
             self.fu += 2
             self.minipoints[u'нет дополнительных фу'] = 2
+        self.fu = self.fu if self.sevenpairs or self.fu % 10 == 0 else (self.fu / 10 + 1) * 10
 
     def sanshokudoko(self):
         d = {}
@@ -671,23 +677,48 @@ class Hand:
                 self.isyakuman = True
                 self.points = 32000
 
-    def count_points(self): # todo
-        round100 = lambda x: (self.fu / 100 + 1) * 100
-        fu = self.fu if self.sevenpairs or self.fu % 10 == 0 else (self.fu / 10 + 1) * 10
-        base = fu * (2**(2 + self.han))
+    def count_points(self):
         multiplier = 6 if self.seat == 'ea' else 4
-        result = base * multiplier
-        if self.victory == u'цумо' and self.seat == 'ea':
+        if self.isyakuman:
+            self.ron_points = 16000 * multiplier / 2
+            self.dealer_pays = 16000
+            self.others_pay = 8000
+        elif self.han >= 5 or (self.han == 4 and self.fu >= 40):
+            if self.han in [4, 5]:
+                self.ron_points = 4000 * multiplier / 2
+                self.dealer_pays = 4000
+                self.others_pay = 2000
+            if self.han in [6, 7]:
+                self.ron_points = 6000 * multiplier / 2
+                self.dealer_pays = 6000
+                self.others_pay = 3000
+            if self.han in [8, 9, 10]:
+                self.ron_points = 8000 * multiplier / 2
+                self.dealer_pays = 8000
+                self.others_pay = 4000
+            if self.han > 10:
+                self.ron_points = 12000 * multiplier / 2
+                self.dealer_pays = 12000
+                self.others_pay = 6000
+        else:
+            round100 = lambda x: (x / 100 + 1) * 100
+            base = self.fu * (2 ** (2 + self.han))  # pay if tsumo
+
+            result = base * multiplier
+            ron = result if result % 100 == 0 else round100(result)
+            self.ron_points = ron
+
             if base % 100 == 0:
                 p1 = base
+                p2 = base * 2
             else:
                 p1 = round100(base)
                 if base % 100 > 50:
                     p2 = p1 * 2
                 else:
                     p2 = p1 * 2 - 100
-        else:
-            result = result if result % 100 == 0 else round100(result)
+            self.dealer_pays = p2
+            self.others_pay = p1
 
 
 if __name__ == '__main__':
