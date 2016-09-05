@@ -292,6 +292,7 @@ class Hand:
     def count(self):
         self.count_yaku()
         if self.isyakuman:
+            self.count_points()
             return
         if self.han == 0:
             self.isvalid = False

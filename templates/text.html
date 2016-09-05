@@ -5,7 +5,8 @@
     <title>Стоимость руки</title>
     <meta name="description" content="Сколько стоит рука в риичи маджонге?">
     <link rel="stylesheet"  type= "text/css" href="{{ url_for('static', filename='styles/tiles2.css') }}">
-
+    <link rel="stylesheet"  type= "text/css" href="{{ url_for('static', filename='styles/styles.css') }}">
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.0/themes/base/jquery-ui.css">
     <style>
         html {font: 100%/150% arial,calibri,helvetica,sans-serif;}
         td {padding: 10px}
@@ -13,11 +14,18 @@
     </style>
 </head>
 <body>
- <h3>Сколько стоит рука?</h3>
+    <h3>Сколько стоит рука?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        <span id="instructions" class="prettybutton">Инструкции</span></h3>
+    <span id="effect" style="display: none" class="box">
+        Подсчитайте стоимость руки в хан и фу, затем выплаты в очках. <br>
+        Если рука стоит более 5 хан, то считать фу необязательно. <br>
+        Если рука является якуманом, достаточно отметить соответсвующий чекбокс. <br>
+        Если в руке нет яку, нужно отметить галочку 'Чомбо' и подсчитать выплату чомбо.<br>
+    </span>
           <table>
               <tr>
                   <td>
-                        Раунд: {{ hand.round_name }}
+                      Раунд: {{ hand.round_name }}
                   </td>
                   <td>
                       Место: {{ hand.seat_name }}
@@ -25,31 +33,27 @@
                   <td>
                       Победа по {{ hand.victory }}
                   </td>
-                  <td>{% if hand.riichi %}
-                  Риичи{% if hand.ippatsu %}, иппацу{% endif %}{% endif %}
+                  <td>
+                      {% if hand.riichi %}Риичи{% if hand.ippatsu %}, иппацу{% endif %}{% endif %}
                   </td>
               </tr>
           </table>
-            <table>
+          <table>
               <tr>
                   <td>
                       Индикатор доры: {{ hand.dora|safe  }}
                   </td>
                   <td>
-                  {% if hand.ura %}
-                      Индикаторы ура-дор: {% for i in hand.ura %} {{ i|safe  }}{% endfor %}
-                     {% endif %}
+                      {% if hand.ura %}Индикаторы ура-дор: {% for i in hand.ura %} {{ i|safe  }}{% endfor %}{% endif %}
                   </td>
                   <td>
-                  {% if hand.kandora %}
-                     Индикаторы кан-дор: {% for i in hand.kandora %} {{ i|safe  }}{% endfor %}
-                     {% endif %}
+                      {% if hand.kandora %}Индикаторы кан-дор: {% for i in hand.kandora %} {{ i|safe  }}{% endfor %}{% endif %}
                   </td>
               </tr>
           </table>
-                <p></p>
-              <p>{{ hand.view|safe }}</p>
-              <form action="#" id="form">
+          <p></p>
+          <p>{{ hand.view|safe }}</p>
+          <form action="#" id="form">
                   <label for="han">Хан: </label><input id="han" size="7" width="7em">
                   <label for="fu">Фу: </label><input id="fu" size="5" width="5em"><br><br>
                   {% if hand.victory == 'рон' %}<label for="ron">Выплата в очках: </label><input id="ron" size="5" width="5em"><br>{% endif %}
@@ -59,15 +63,15 @@
                       {% endif %}
                       {% if hand.seat == 'so' or hand.seat == 'no' or hand.seat == 'we'%}
                       <label for="tsumo1">Дилер платит <input id="tsumo1" size="5" width="5em"> очков</label><br>
-                          <label for="tsumo2">Остальные платят <input id="tsumo2" size="5" width="5em"> очков</label><br>
+                      <label for="tsumo2">Остальные платят <input id="tsumo2" size="5" width="5em"> очков</label><br>
                       {% endif %}
                   {% endif %}
-              <br>
+                  <br>
                   <label><input type="checkbox" id="chombo"> Чомбо</label>
                   <label><input type="checkbox" id="yakuman"> Якуман</label><br><br>
-                  <input id='check' type="submit" value="Проверить">
-                  <button id='reload' type="button" onClick="history.go(0)">Обновить</button>
-              </form>
+                  <input class="bigprettybutton" id='check' type="submit" value="Проверить">
+                  <button class="bigprettybutton" id='reload' type="button" onClick="history.go(0)">Обновить</button>
+          </form>
                 <span id="response"></span>
                 <div id="cost" style="display: none">
                 {% if not hand.isyakuman %}
@@ -90,7 +94,7 @@
                       {% endif %}
                       {% if hand.seat == 'so' or hand.seat == 'no' or hand.seat == 'we'%}
                      Дилер платит {{ hand.dealer_pays }} очков<br>
-                          Остальные платят  {{ hand.others_pay}} очков<br>
+                     Остальные платят  {{ hand.others_pay}} очков<br>
                       {% endif %}
                   {% endif %}
                 </div>
@@ -100,6 +104,16 @@
 </body>
 
 <script type="text/javascript" src="{{ url_for('static', filename='jquery-1.11.0.min.js') }}"></script>
+<script src="https://code.jquery.com/ui/1.12.0/jquery-ui.js"></script>
+<script>
+  $( function() {
+
+    // Set effect from select menu value
+    $( "#instructions" ).on( "click", function() {
+      $( "#effect" ).toggle( "drop", {}, 500 );
+    });
+  } );
+  </script>
 <script type="text/javascript">
 
     $(function () {
@@ -151,8 +165,9 @@
         }
 
         $("#form").submit(function(e) {
-    e.preventDefault(); check();
-});
+            e.preventDefault();
+            check();
+            });
     })
 
 </script>
