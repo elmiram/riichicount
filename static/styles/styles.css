@@ -43,6 +43,6 @@
 input {
     /*border: none;*/
     /*border-bottom: 2px dashed rgba(3, 14, 175, 0.6);*/
-    border: 2px solid rgba(3, 14, 175, 0.6);
+    border: 1px solid rgba(3, 14, 175, 0.6);
     border-radius: 4px;
 }
