@@ -1,3 +1,7 @@
+/*h3 {*/
+ /*color: rgba(3, 14, 148, 0.98);*/
+/*}*/
+
 .prettybutton {
   background-color: transparent;
   border: 1px solid rgba(3, 14, 148, 0.98);
@@ -29,9 +33,16 @@
   padding: 2px 3px;
   border-radius: 10px;
   color: rgba(3, 14, 148, 0.98);
-  font-size: 1.1em;
+  font-size: 1.0em;
     font-weight: 600;
   opacity: .9;
   margin-bottom: 0;
     cursor: pointer;
+}
+
+input {
+    /*border: none;*/
+    /*border-bottom: 2px dashed rgba(3, 14, 175, 0.6);*/
+    border: 2px solid rgba(3, 14, 175, 0.6);
+    border-radius: 4px;
 }
