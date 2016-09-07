@@ -15,5 +15,6 @@ def hello_world():
     while a.isvalid != isvalid:
         a = Hand()
     return render_template('text.html', hand=a)
+
 if __name__ == '__main__':
     app.run(debug=True)

@@ -1,4 +1,10 @@
 # coding=utf-8
+
+"""
+Посчитать выплату в очках по количеству хан и фу и ветру победителя.
+"""
+
+
 def count_points(han, fu, seat):
     round100 = lambda x: (x / 100 + 1) * 100
     base = fu * (2 ** (2 + han))  # pay if tsumo
@@ -21,4 +27,5 @@ def count_points(han, fu, seat):
     print u'Если цумо вытащил дилер %d' % (p2)
 
 
-count_points(3, 25, 'ea')
+if __name__ == "__main__":
+    count_points(3, 25, 'ea')
