@@ -74,37 +74,15 @@ class Meld:
 
 
 class Hand:
-    def __init__(self):
-        self.tiles = defaultdict(int)
-        self.round = random_pick(['ea', 'so', 'we'], [0.4, 0.4, 0.2])
-        self.round_name = WINDS[self.round]
-        self.seat = random.choice(list(WINDS.keys()))
-        self.seat_name = WINDS[self.seat]
-        self.victory = random.choice([u'рон', u'цумо'])
-        self.yaku = defaultdict(int)
-        self.minipoints = defaultdict(int)
-        self.han = 0
-        self.fu = 0
-        self.points = 0
-        self.dora = self.getdora()
-        self.kandora = []
+    def __init__(self, game):
+        self.game = game
         self.h = []
         self.melds = []
-        self.last_meld = Meld()
-        self.starthand = random_pick([self.create_structure, self.create_chitoi, self.create_kokushi], [0.8, 0.15, 0.05])
-        self.starthand()
-        if self.victory == u'рон':
-            self.last_meld.isopen = True
-        self.view = self.publish(self.sorthand(self.h))
         self.isclosed = True
-        self.isvalid = True
-        if any(t.isopen for t in self.h):
-            self.isclosed = False
-        self.riichi = False
-        self.isyakuman = False
-        self.ippatsu = False
-        self.ura = []
-        self.count()
+        self.starthand = random_pick([self.create_structure, self.create_chitoi, self.create_kokushi],
+                                     [0.8, 0.15, 0.05])
+        self.starthand()
+        self.view = self.publish(self.sorthand(self.h))
 
     def create_structure(self):
         a = []
@@ -113,8 +91,8 @@ class Hand:
         for f in a:
             self.h += f()
         self.h += self.pair()
-        self.last_meld = random.choice([m for m in self.melds if not m.isopen and not m.kind == 'kan'])
-        last_tile = self.last_meld.last_tile()
+        last_meld = random.choice([m for m in self.melds if not m.isopen and not m.kind == 'kan'])
+        last_tile = last_meld.last_tile()
         last_tile.winning = True
 
     def create_chitoi(self):
@@ -122,8 +100,8 @@ class Hand:
             p = self.pair()
             if p[0] not in self.h:
                 self.h += p
-        self.last_meld = random.choice([m for m in self.melds if not m.isopen and not m.kind == 'kan'])
-        last_tile = self.last_meld.last_tile()
+        last_meld = random.choice([m for m in self.melds if not m.isopen and not m.kind == 'kan'])
+        last_tile = last_meld.last_tile()
         last_tile.winning = True
 
     def create_kokushi(self):
@@ -136,31 +114,17 @@ class Hand:
         v = random.choice([1, 13])
         if v == 13:
             self.points = 64000
-            self.last_meld = Meld(tiles=[random.choice(self.h)])
-            last_tile = self.last_meld.tiles[0]
+            last_meld = Meld(tiles=[random.choice(self.h)])
+            last_tile = last_meld.tiles[0]
             last_tile.winning = True
             self.h.append(last_tile)
         else:
             win, pair = random.sample(self.h, 2)
             self.points = 32000
-            self.last_meld = Meld(tiles=[win])
-            last_tile = self.last_meld.tiles[0]
+            last_meld = Meld(tiles=[win])
+            last_tile = last_meld.tiles[0]
             last_tile.winning = True
             self.h += [pair]
-
-    def checktiles(self, t):
-        t = [(i.value, i.suit) for i in t]
-        a = {}
-        for el in t:
-            if el in a:
-                a[el] += 1
-            else:
-                a[el] = self.tiles[el] + 1
-            if a[el] >= 4:
-                return False
-        for el in a:
-            self.tiles[el] = a[el]
-        return True
 
     def chi(self):
         value = random.choice(['1', '2', '3', '4', '5', '6', '7'])
@@ -170,10 +134,11 @@ class Hand:
                Tile(value=str(int(value) + 1), suit=suit, isopen=isopen),
                Tile(value=str(int(value) + 2), suit=suit, isopen=isopen)]
         if isopen:
+            self.isclosed = False
             for i in res:
                 i.state = 'd'
             res[0].state = 'r'
-        if not self.checktiles(res):
+        if not self.game.checktiles(res):
             return self.chi()
         self.melds.append(Meld(kind='chi', isopen=isopen, tiles=res))
         return res
@@ -189,12 +154,13 @@ class Hand:
             for el in res:
                 el.suit = suit
         if isopen:
+            self.isclosed = False
             for el in res:
                 el.state = 'd'
             player = random.choice([0, 1, 2])
             variants = ['l', 'l', 'r']
             res[player].state = variants[player]
-        if not self.checktiles(res):
+        if not self.game.checktiles(res):
             return self.pon()
         self.melds.append(Meld(kind='pon', isopen=isopen, tiles=res))
         return res
@@ -210,6 +176,7 @@ class Hand:
                        Tile(value=value, suit=suit, isopen=not isopen, state='d', ordering='3'+value),
                        Tile(value=value, suit=suit, isopen=not isopen, ordering='4'+value)]
             else:
+                self.isclosed = False
                 res = [Tile(value=value, suit=suit, isopen=isopen, state='d'),
                        Tile(value=value, suit=suit, isopen=isopen, state='d'),
                        Tile(value=value, suit=suit, isopen=isopen, state='d'),
@@ -224,6 +191,7 @@ class Hand:
                        Tile(value=value, suit='z', isopen=not isopen, state='d', ordering='3'+value),
                        Tile(value=value, suit='z', isopen=not isopen, ordering='4'+value)]
             else:
+                self.isclosed = False
                 res = [Tile(value=value, suit='z', isopen=isopen, state='d'),
                        Tile(value=value, suit='z', isopen=isopen, state='d'),
                        Tile(value=value, suit='z', isopen=isopen, state='d'),
@@ -231,9 +199,9 @@ class Hand:
                 player = random.choice([0, 1, 3])
                 variants = ['l', 'l', 'l', 'r']
                 res[player].state = variants[player]
-        if not self.checktiles(res):
+        if not self.game.checktiles(res):
             return self.pon()
-        self.kandora.append(self.getdora())
+        self.game.kandora.append(self.game.getdora())
         self.melds.append(Meld(kind='kan', isopen=isopen, tiles=res))
         return res
 
@@ -244,20 +212,9 @@ class Hand:
             res = [Tile(value=value, suit=suit), Tile(value=value, suit=suit)]
         else:
             res = [Tile(value=value, suit='z'), Tile(value=value, suit='z')]
-        if not self.checktiles(res):
+        if not self.game.checktiles(res):
             return self.pair()
         self.melds.append(Meld(kind='pair', isopen=False, tiles=res))
-        return res
-
-    def getdora(self):
-        value = random.choice(list(NUMS.keys()) + list(HONORS.keys()))
-        if value in NUMS.keys():
-            suit = random.choice(list(SUITS.keys()))
-            res = Tile(value=value, suit=suit)
-        else:
-            res = Tile(value=value, suit='z')
-        if not self.checktiles([res]):
-            return self.getdora()
         return res
 
     def publish(self, hand):
@@ -273,6 +230,70 @@ class Hand:
     def sorthand(self, h):
         return sorted(h, key=attrgetter('isopen', 'suit', 'ordering', 'value'))
 
+
+class Game:
+    def __init__(self):
+        self.tiles = defaultdict(int)
+        self.round = random_pick(['ea', 'so', 'we'], [0.45, 0.45, 0.1])
+        self.round_name = WINDS[self.round]
+        self.seat = random.choice(list(WINDS.keys()))
+        self.seat_name = WINDS[self.seat]
+        self.victory = random.choice([u'рон', u'цумо'])
+        self.dora = self.getdora()
+        self.ura = []
+        self.kandora = []
+        self.hand = Hand(self)
+        self.riichi = random.choice([True, False]) if self.hand.isclosed else False
+        self.ippatsu = random.choice([True, False]) if self.riichi else False
+        self.result = Counter(self)
+
+    def getdora(self):
+        value = random.choice(list(NUMS.keys()) + list(HONORS.keys()))
+        if value in NUMS.keys():
+            suit = random.choice(list(SUITS.keys()))
+            res = Tile(value=value, suit=suit)
+        else:
+            res = Tile(value=value, suit='z')
+        if not self.checktiles([res]):
+            return self.getdora()
+        return res
+
+    def checktiles(self, t):
+        t = [(i.value, i.suit) for i in t]
+        a = {}
+        for el in t:
+            if el in a:
+                a[el] += 1
+            else:
+                a[el] = self.tiles[el] + 1
+            if a[el] >= 4:
+                return False
+        for el in a:
+            self.tiles[el] = a[el]
+        return True
+
+
+class Counter:
+    def __init__(self, game):
+        self.game = game
+        self.hand = self.game.hand
+
+        self.yaku = defaultdict(int)
+        self.minipoints = defaultdict(int)
+        self.han = 0
+        self.fu = 0
+        self.points = 0
+
+        if self.victory == u'рон':
+            self.last_meld.isopen = True
+
+        self.isvalid = True
+        self.isyakuman = False
+
+        self.riichi = game.riichi
+        self.ippatsu = game.ippatsu
+        self.count()
+
     def num_dora(self, arr):
         n = 0
         for u in arr:
@@ -282,6 +303,21 @@ class Hand:
                 if t.value == d_val and t.suit == d_suit:
                     n += 1
         return n
+
+    def has_riichi(self):
+        if self.riichi:
+            self.han += 1
+            self.yaku[u'риичи'] += 1
+            if self.ippatsu:
+                self.han += 1
+                self.yaku[u'иппацу'] += 1
+            for _ in self.kandora + [self.dora]:
+                self.ura.append(self.getdora())
+            if self.ura:
+                dora = self.num_dora(self.ura)
+                if dora > 0:
+                    self.han += dora
+                    self.yaku[u'ура-дора'] += dora
 
     def has_dora(self):
         dora = self.num_dora([self.dora]) + self.num_dora(self.kandora)
@@ -301,31 +337,14 @@ class Hand:
         self.count_points()
         return
 
-    def has_riichi(self):
-        if self.isclosed:
-            self.riichi = random.choice([True, False])
-            if self.riichi:
-                self.han += 1
-                self.yaku[u'риичи'] += 1
-                self.ippatsu = random.choice([True, False])
-                if self.ippatsu:
-                    self.han += 1
-                    self.yaku[u'иппацу'] += 1
-                for _ in self.kandora + [self.dora]:
-                    self.ura.append(self.getdora())
-                if self.ura:
-                    dora = self.num_dora(self.ura)
-                    if dora > 0:
-                        self.han += dora
-                        self.yaku[u'ура-дора'] += dora
 
     def tsumo(self):
-        if self.isclosed and self.victory == u'цумо':
+        if self.hand.isclosed and self.game.victory == u'цумо':
             self.han += 1
             self.yaku[u'цумо'] += 1
 
     def pinfu(self):
-        if self.isclosed:
+        if self.hand.isclosed:
             p = [m for m in self.melds if m.kind == 'pair'][0].tiles[0].value
             if all(m.kind == 'chi' or m.kind == 'pair' for m in self.melds):
                 if self.last_meld.ryanmen is True and p not in HONORS.keys():
@@ -335,7 +354,7 @@ class Hand:
         return False
 
     def tanyao(self):
-        if all(t.issimple() for t in self.h):
+        if all(t.issimple() for t in self.hand.h):
             self.han += 1
             self.yaku[u'таняо'] += 1
 
@@ -471,16 +490,16 @@ class Hand:
         return False
 
     def honitsu(self):
-        suits = set([i.suit for i in self.h if i.suit != 'z'])
+        suits = set([i.suit for i in self.hand.h if i.suit != 'z'])
         if len(suits) == 1:
             self.yaku[u'хоницу'] += 2
             self.han += 2
-            if self.isclosed:
+            if self.hand.isclosed:
                 self.han += 1
                 self.yaku[u'хоницу'] += 1
 
     def chitoi(self):
-        if self.starthand == self.create_chitoi:
+        if self.hand.starthand == self.hand.create_chitoi:
             self.han += 2
             self.yaku[u'читойцу'] += 2
             return True
@@ -527,14 +546,14 @@ class Hand:
         self.sanankou()
         self.sanshokudoko()
         self.sankantsu()
-        self.churenpoto() # todo
+        self.churenpoto()  # todo
         self.ryuisou()
         self.sukantsu()
         self.chinroto()
 
     def count_fu(self):
         if self.pnf:
-            if self.victory == u'рон':
+            if self.game.victory == u'рон':
                 self.fu = 30
                 self.minipoints[u'пинфу по рон'] = 30
             else:
@@ -545,18 +564,18 @@ class Hand:
             self.fu += 25
             self.minipoints[u'читойцу'] = 25
             return
-        elif self.isclosed and self.victory == u'рон':
+        elif self.hand.isclosed and self.game.victory == u'рон':
             self.fu += 30
             self.minipoints[u'рон в закрытой руке'] = 30
         else:
             self.fu += 20
             self.minipoints[u'база'] = 20
 
-        if self.victory == u'цумо' and not self.pnf:
+        if self.game.victory == u'цумо' and not self.pnf:
             self.fu += 2
             self.minipoints[u'цумо'] = 2
         if not self.sevenpairs:
-            pair_value = [m for m in self.melds if m.kind=='pair'][0].tiles[0].value
+            pair_value = [m for m in self.melds if m.kind == 'pair'][0].tiles[0].value
         else:
             pair_value = self.last_meld.tiles[0].value
         melds = [m for m in self.melds if m.kind in ['pon', 'kan']]
@@ -627,15 +646,15 @@ class Hand:
                 self.han += 2
 
     def sankantsu(self):
-        kans = [m for m in self.melds if m.kind=='kan']
+        kans = [m for m in self.melds if m.kind == 'kan']
         if len(kans) == 3:
             self.yaku[u'санканцу'] += 2
             self.han += 2
 
     def kokushi(self):
-        if self.starthand == self.create_kokushi:
+        if self.hand.starthand == self.hand.create_kokushi:
             self.isyakuman = True
-            if len(set(self.h)) == 13:
+            if len(set(self.hand.h)) == 13:
                 self.yaku = {u'кокуши мусо с 13-сторонним ожиданием': u'якуман'}
             else:
                 self.yaku = {u'кокуши мусо': u'якуман'}
@@ -644,8 +663,8 @@ class Hand:
 
     def churenpoto(self):
         if self.chin:
-            a = ''.join(sorted([i.value for i in self.h]))
-            a2 = ''.join(sorted([i.value for i in self.h if not i.winning]))
+            a = ''.join(sorted([i.value for i in self.hand.h]))
+            a2 = ''.join(sorted([i.value for i in self.hand.h if not i.winning]))
             if a2 == '1112345678999':
                 self.isyakuman = True
                 self.points = 64000
@@ -664,7 +683,7 @@ class Hand:
                 self.yaku = {u'рюисоу': u'якуман'}
 
     def sukantsu(self):
-        pons = [m for m in self.melds if m.kind=='kan']
+        pons = [m for m in self.melds if m.kind == 'kan']
         if len(pons) == 4:
             self.yaku = {u'суканцу': u'якуман'}
             self.isyakuman = True
@@ -679,7 +698,7 @@ class Hand:
                 self.points = 32000
 
     def count_points(self):
-        multiplier = 6 if self.seat == 'ea' else 4
+        multiplier = 6 if self.game.seat == 'ea' else 4
         if self.isyakuman:
             self.ron_points = 16000 * multiplier / 2
             self.dealer_pays = 16000
@@ -722,10 +741,12 @@ class Hand:
             self.others_pay = p1
 
 
+
+
 if __name__ == '__main__':
     for _ in range(10):
-        a = Hand()
-        print(a.view)
+        a = Game()
+        print(a.hand.view)
         print('<br>')
     # a = Hand()
     # a.yaku = defaultdict(int)
